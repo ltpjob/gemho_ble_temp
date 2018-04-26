@@ -56,8 +56,9 @@
 #include "GemhoProfile.h"
 #include <ti/drivers/UART.h>
 #include "Board.h"
-#include "ThinkGearStreamParser.h"
 #include <stdio.h>
+#include <ti/drivers/ADC.h>
+#include <math.h>
 
 #define GEMNOTIFY_TASK_STACK_SIZE                   2048
 #define DELAY_MS(i)      (Task_sleep(((i) * 1000) / Clock_tickPeriod))
@@ -212,90 +213,93 @@ bStatus_t GemhoProfile_Notification(gattCharCfg_t *charCfgTbl, uint8 *pValue,
     return (status);
 }
 
-void handleDataValueFunc(unsigned char extendedCodeLevel,
-                                unsigned char code, unsigned char numBytes,
-                                const unsigned char *value, void *customData)
-{
-    static uint8 poorSignal = 0;
-    static uint8 heartRate = 0;
-//    static int16 rawWave = 0;
-    static uint8 count = 0;
-
-    if (extendedCodeLevel == 0)
-    {
-        if(code == 0x80)
-        {
-            static uint8 buffer[20] = "";
-
-//            rawWave = (value[0]<<8) | value[1];
-            buffer[count*2] = value[0];
-            buffer[count*2+1] = value[1];
-            count++;
-
-            if(count >= 9)
-            {
-                buffer[count*2] = poorSignal;
-                buffer[count*2+1] = heartRate;
-                count = 0;
-                GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                            GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                            (uint8 *)buffer, sizeof(buffer));
-            }
-
-
-//            snprintf(buffer, sizeof(buffer), "%u,%d,%u", poorSignal, rawWave, heartRate);
-//            GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-//                                        GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-//                                        (uint8 *)buffer, strlen(buffer));
-
-
-        }
-        else if(code == 0x02)
-        {
-            poorSignal = value[0];
-        }
-        else if(code == 0x03)
-        {
-            heartRate = value[0];
-        }
-    }
-
-}
-
 static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 {
-    char input[128];
-    UART_Handle uart;
-    UART_Params uartParams;
-    ThinkGearStreamParser parser;
+    ADC_Handle   adc, vdds;
+    ADC_Params   params;
+    int_fast16_t res0=0, res1=0;
+    uint16_t adcValue0, adcValue1;
 
-    UART_init();
+    char buf[128];
 
-    UART_Params_init(&uartParams);
-    uartParams.writeDataMode = UART_DATA_BINARY;
-    uartParams.readDataMode = UART_DATA_BINARY;
-    uartParams.readReturnMode = UART_RETURN_FULL;
-    uartParams.readEcho = UART_ECHO_OFF;
-    uartParams.baudRate = 57600;
 
-    uart = UART_open(Board_UART0, &uartParams);
 
-    if(uart == NULL)
-    {
+    ADC_init();
+    ADC_Params_init(&params);
+    adc = ADC_open(CC2640R2_LAUNCHXL_ADC0, &params);
+    vdds = ADC_open(CC2640R2_LAUNCHXL_ADCVDDS, &params);
+
+    if (adc == NULL) {
         while (1);
     }
-
-    THINKGEAR_initParser (&parser, PARSER_TYPE_PACKETS, handleDataValueFunc, NULL);
 
     while(1)
     {
         if(linkDB_NumActive() > 0)
         {
-            int len = UART_read(uart, input, sizeof(input));
-            for(int i=0; i<len; i++)
+//            adcValue0MicroVolt = 0;
+//            adcVDDSMicroVolt = 0;
+//            temperature = 0;
+//            uint32 loopCount = 100000;
+//            for(int i=0; i<loopCount; i++)
+//            {
+//                res0 = ADC_convert(adc, &adcValue0);
+////                res1 = ADC_convert(vdds, &adcValue1);
+//
+//                if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
+//                {
+//
+////                    adcValue0MicroVolt = ADC_convertToMicroVolts(adc, adcValue0);
+////                    adcVDDSMicroVolt = ADC_convertToMicroVolts(vdds, adcValue1);
+//                    adcValue0MicroVolt = adcValue0;
+//                    adcVDDSMicroVolt = 4095;
+//
+//                    RT = 22.1*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
+//
+//                    temperature += 1/(1/TN + log(RT/RN)/B)-273.15;
+//                }
+//            }
+//            temperature /= loopCount;
+//            sprintf(buf, "%.4f %.4f %.4f %.4f℃ %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
+//                    adcValue0, adcValue1);
+//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                      (uint8 *)buf, strlen(buf));
+
+            double adcValue0MicroVolt, adcVDDSMicroVolt;
+            uint32 loopCount = 10000*4;
+            double temperature = 0;
+            double RT = 0;
+            const double B=3949;
+            const double TN=273.15+37;//常温
+            const double RN=30.218;//常温对应的阻值，注意单位是千欧
+
+            adcValue0MicroVolt = 0;
+            adcVDDSMicroVolt = 0;
+            for(int i=0; i<loopCount; i++)
             {
-                THINKGEAR_parseByte (&parser, input[i]);
+                res0 = ADC_convert(adc, &adcValue0);
+                res1 = ADC_convert(vdds, &adcValue1);
+
+                if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
+                {
+                    adcValue0MicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
+                    adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
+//                    adcValue0MicroVolt += adcValue0/1000.0;
+//                    adcVDDSMicroVolt += adcValue1/1000.0;
+                }
             }
+
+            RT = 22.1*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
+            temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
+
+            sprintf(buf, "%.4fKΩ %.4f℃", RT, temperature);
+//            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
+//                    adcValue0, adcValue1);
+            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+                                      (uint8 *)buf, strlen(buf));
+
         }
         else
         {
@@ -377,9 +381,9 @@ bStatus_t GemhoProfile_SetParameter( uint8 param, uint8 len, void *value )
         memcpy(GemhoProfile_Gemho_serviceVal, value, len);
 
         // Try to send notification.
-        GATTServApp_ProcessCharCfg( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                    GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                    INVALID_TASK_ID,  GemhoProfile_ReadAttrCB);
+//        GATTServApp_ProcessCharCfg( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                    GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                    INVALID_TASK_ID,  GemhoProfile_ReadAttrCB);
       }
       else
       {

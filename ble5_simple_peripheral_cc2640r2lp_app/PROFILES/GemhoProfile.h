@@ -57,11 +57,11 @@ extern "C"
 * CONSTANTS
 */
 // Service UUID
-#define GEMHOPROFILE_SERV_UUID 0xBABE
+#define GEMHOPROFILE_SERV_UUID 0xEAEF
 
 //  Characteristic defines
 #define GEMHOPROFILE_GEMHO_SERVICE      0
-#define GEMHOPROFILE_GEMHO_SERVICE_UUID 0xBEEF
+#define GEMHOPROFILE_GEMHO_SERVICE_UUID 0xCAFE
 #define GEMHOPROFILE_GEMHO_SERVICE_LEN  20
 
 /*********************************************************************
