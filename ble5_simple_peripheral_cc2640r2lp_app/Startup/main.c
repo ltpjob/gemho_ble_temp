@@ -83,6 +83,8 @@ bleUserCfg_t user0Cfg = BLE_USER_CFG;
 #include <inc/hw_prcm.h>
 #endif // USE_FPGA
 
+#include "pinShutdown.h"
+
 /*******************************************************************************
  * MACROS
  */
@@ -96,8 +98,8 @@ static const PIN_Config GemhoECGGpioInitTable[] = {
     CC2640R2_LAUNCHXL_PIN_RLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
     CC2640R2_LAUNCHXL_PIN_GLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,       /* LED initially off */
     CC2640R2_LAUNCHXL_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_BOTHEDGES | PIN_HYSTERESIS,          /* Button is active low */
-    CC2640R2_LAUNCHXL_PIN_BTN2 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,           /* Button is active low */
-    CC2640R2_LAUNCHXL_UART_RTS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+    CC2640R2_LAUNCHXL_PIN_IA | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,           /* Button is active low */
+    CC2640R2_LAUNCHXL_PIN_IB | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX,
     CC2640R2_LAUNCHXL_SPI_FLASH_CS | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MIN,  /* External flash chip select */
     CC2640R2_LAUNCHXL_UART_RX | PIN_INPUT_EN | PIN_PULLDOWN,                                              /* UART RX via debugger back channel */
     CC2640R2_LAUNCHXL_UART_TX | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL,                        /* UART TX via debugger back channel */
@@ -230,6 +232,8 @@ int main()
 
   /* Kick off profile - Priority 3 */
   GAPRole_createTask();
+
+  board_initPinShutdown();
 
   SimpleBLEPeripheral_createTask();
 

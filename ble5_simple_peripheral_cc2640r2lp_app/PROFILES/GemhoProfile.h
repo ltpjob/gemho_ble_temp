@@ -62,7 +62,7 @@ extern "C"
 //  Characteristic defines
 #define GEMHOPROFILE_GEMHO_SERVICE      0
 #define GEMHOPROFILE_GEMHO_SERVICE_UUID 0xCAFE
-#define GEMHOPROFILE_GEMHO_SERVICE_LEN  20
+#define GEMHOPROFILE_GEMHO_SERVICE_LEN  30
 
 /*********************************************************************
  * TYPEDEFS

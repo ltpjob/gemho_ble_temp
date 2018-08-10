@@ -62,6 +62,7 @@
 
 #define GEMNOTIFY_TASK_STACK_SIZE                   2048
 #define DELAY_MS(i)      (Task_sleep(((i) * 1000) / Clock_tickPeriod))
+#define DELAY_US(i)      (Task_sleep((i) / Clock_tickPeriod))
 
 // GemhoProfile Service UUID
 CONST uint8_t GemhoProfileUUID[ATT_BT_UUID_SIZE] =
@@ -267,7 +268,7 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 //                                      (uint8 *)buf, strlen(buf));
 
             double adcValue0MicroVolt, adcVDDSMicroVolt;
-            uint32 loopCount = 10000*4;
+            uint32 loopCount = 10000*3;
             double temperature = 0;
             double RT = 0;
             const double B=3949;
@@ -287,23 +288,27 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
                     adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
 //                    adcValue0MicroVolt += adcValue0/1000.0;
 //                    adcVDDSMicroVolt += adcValue1/1000.0;
+//                    DELAY_US(100);
                 }
             }
 
             RT = 22.1*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
             temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
 
-            sprintf(buf, "%.4fKΩ %.4f℃", RT, temperature);
+            sprintf(buf, "%.4f %.4f", RT, temperature);
+            sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
 //            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
 //                    adcValue0, adcValue1);
-            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                      (uint8 *)buf, strlen(buf));
+//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                      (uint8 *)buf, strlen(buf));
+
+//            DELAY_MS(3000);
 
         }
         else
         {
-            DELAY_MS(100);
+            DELAY_MS(1000);
         }
     }
 
