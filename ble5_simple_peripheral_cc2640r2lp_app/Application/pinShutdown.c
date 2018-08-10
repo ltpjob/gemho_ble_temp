@@ -65,6 +65,9 @@
 #include <ti/drivers/power/PowerCC26XX.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 #include <ti/devices/DeviceFamily.h>
+#include "bcomdef.h"
+#include "OSAL.h"
+#include "linkdb.h"
 #include DeviceFamily_constructPath(inc/hw_prcm.h)
 #include DeviceFamily_constructPath(driverlib/sys_ctrl.h)
 
@@ -77,6 +80,10 @@
 /* Task and tast stack */
 Task_Struct myTask;
 Char myTaskStack[512];
+
+Task_Struct ledTask;
+volatile bool is_ledTaskQuit;
+Char ledTaskStack[512];
 
 /* Semaphore used to gate for shutdown */
 Semaphore_Struct shutdownSem;
@@ -104,16 +111,9 @@ PIN_Id activeButtonPinId;
 /* Led pin table used when waking from reset*/
 PIN_Config LedPinTable[] = {
     CC2640R2_LAUNCHXL_PIN_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
-    CC2640R2_LAUNCHXL_PIN_LED1    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially on */
     PIN_TERMINATE                                                    /* Terminate list */
 };
 
-/* Led pin table used when waking from shutdown */
-PIN_Config LedPinTableSd[] = {
-    CC2640R2_LAUNCHXL_PIN_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially on */
-    CC2640R2_LAUNCHXL_PIN_LED1    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
-    PIN_TERMINATE                                                    /* Terminate list */
-};
 
 /* Wake-up Button pin table */
 PIN_Config ButtonTableWakeUp[] = {
@@ -205,27 +205,13 @@ static void buttonCb(PIN_Handle handle, PIN_Id pinId) {
  ******************************************************************************/
 static void taskFxn(UArg a0, UArg a1)
 {
-    /* If we are waking up from shutdown, we do something extra. */
-    if (isWakingFromShutdown) {
-        /* In this example we toggle LED1 */
-        uint32_t sleepUs = 500000;
-        Task_sleep(sleepUs / Clock_tickPeriod);
-        PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
-        Task_sleep(sleepUs / Clock_tickPeriod);
-        PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 1);
-        Task_sleep(sleepUs / Clock_tickPeriod);
-        PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
-        Task_sleep(sleepUs / Clock_tickPeriod);
-    }
-
-    /* Turn on LED0 to indicate active */
-    PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED1, 1);
 
     /* Pend on semaphore before going to shutdown */
     Semaphore_pend(Semaphore_handle(&shutdownSem), BIOS_WAIT_FOREVER);
 
     /* Turn off LED0 */
-    PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED1, 0);
+    is_ledTaskQuit = 1;
+    PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
 
     DELAY_MS(230);
 
@@ -237,6 +223,22 @@ static void taskFxn(UArg a0, UArg a1)
 
     /* Should never get here, since shutdown will reset. */
     while (1);
+}
+
+static void taskFxn_led(UArg a0, UArg a1)
+{
+    hPins = PIN_open(&LedPinState, LedPinTable);
+    while (is_ledTaskQuit == 0)
+    {
+        PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 1);
+        DELAY_MS(800);
+        if(linkDB_NumActive() <= 0)
+        {
+            PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
+            DELAY_MS(800);
+        }
+
+    }
 }
 
 /*!*****************************************************************************
@@ -265,15 +267,9 @@ int board_initPinShutdown(void)
          * output.
          */
         isWakingFromShutdown = true;
-        /* Open LED pins with shutdown table (LED1 on, LED0 off).
-         * A separate PIN_config table is used to keep LED1 on.
-         */
-        hPins = PIN_open(&LedPinState, LedPinTableSd);
     } else {
         /* When not waking from shutdown, use default init table. */
         isWakingFromShutdown = false;
-        /* Open LED pins (LED1 off, LED0 on)*/
-        hPins = PIN_open(&LedPinState, LedPinTable);
     }
 
     /* Setup button pins with ISR */
@@ -291,17 +287,21 @@ int board_initPinShutdown(void)
     Task_Params_init(&taskParams);
     taskParams.stack = myTaskStack;
     taskParams.stackSize = sizeof(myTaskStack);
-    taskParams.priority = 2;
+    taskParams.priority = 4;
     Task_construct(&myTask, taskFxn, &taskParams, NULL);
+
+    Task_Params taskParams_led;
+    Task_Params_init(&taskParams_led);
+    taskParams_led.stack = ledTaskStack;
+    taskParams_led.stackSize = sizeof(ledTaskStack);
+    taskParams_led.priority = 3;
+    is_ledTaskQuit = 0;
+    Task_construct(&ledTask, taskFxn_led, &taskParams_led, NULL);
 
     /* Configure shutdown semaphore. */
     Semaphore_Params_init(&semParams);
     semParams.mode = Semaphore_Mode_BINARY;
     Semaphore_construct(&shutdownSem, 0, &semParams);
 
-    /* Start kernel. */
-//    BIOS_start();
-
-    /* Should never get here, keep compiler happy */
     return (0);
 }
