@@ -197,7 +197,7 @@ clean:
 	-@echo ' '
 
 pre-build:
-	-C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/../../../tools/ble5stack/lib_search/lib_search         D:/project/gemho_ble_temp.git/trunk/ble5_simple_peripheral_cc2640r2lp_stack_library/TOOLS/build_config.opt         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/blelib         D:/project/gemho_ble_temp.git/trunk/ble5_simple_peripheral_cc2640r2lp_stack_library/FlashROM_Library/lib_linker.cmd         cc2640         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/../../../tools/ble5stack/lib_search/lib_search.xml         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/symbols
+	-C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/../../../tools/ble5stack/lib_search/lib_search         D:/project/gemho_ble_temp/ble5_simple_peripheral_cc2640r2lp_stack_library/TOOLS/build_config.opt         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/blelib         D:/project/gemho_ble_temp/ble5_simple_peripheral_cc2640r2lp_stack_library/FlashROM_Library/lib_linker.cmd         cc2640         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/../../../tools/ble5stack/lib_search/lib_search.xml         C:/ti/simplelink_cc2640r2_sdk_1_40_00_45/source/ti/ble5stack/symbols
 	-@echo ' '
 
 .PHONY: all clean dependents
