@@ -110,20 +110,21 @@ PIN_Id activeButtonPinId;
 
 /* Led pin table used when waking from reset*/
 PIN_Config LedPinTable[] = {
-    CC2640R2_LAUNCHXL_PIN_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
+    Board_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
     PIN_TERMINATE                                                    /* Terminate list */
 };
 
 
 /* Wake-up Button pin table */
 PIN_Config ButtonTableWakeUp[] = {
-    CC2640R2_LAUNCHXL_PIN_BTN3     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
+    Board_BUTTON0     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
+    Board_BUTTON1     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
 /* Shutdown Button pin table */
 PIN_Config ButtonTableShutdown[] = {
-    CC2640R2_LAUNCHXL_PIN_BTN3   | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
+    Board_BUTTON0   | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
@@ -152,7 +153,7 @@ static void buttonClockCb(UArg arg) {
         if (!PIN_getInputValue(activeButtonPinId)) {
             /* Toggle LED based on the button pressed */
             switch (activeButtonPinId) {
-            case CC2640R2_LAUNCHXL_PIN_BTN3:
+            case Board_BUTTON0:
                 Semaphore_post(Semaphore_handle(&shutdownSem));
                 break;
             default:
@@ -211,7 +212,7 @@ static void taskFxn(UArg a0, UArg a1)
 
     /* Turn off LED0 */
     is_ledTaskQuit = 1;
-    PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
+    PIN_setOutputValue(hPins, Board_LED0, 0);
 
     DELAY_MS(230);
 
@@ -230,11 +231,11 @@ static void taskFxn_led(UArg a0, UArg a1)
     hPins = PIN_open(&LedPinState, LedPinTable);
     while (is_ledTaskQuit == 0)
     {
-        PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 1);
+        PIN_setOutputValue(hPins, Board_LED0, 1);
         DELAY_MS(800);
         if(linkDB_NumActive() <= 0)
         {
-            PIN_setOutputValue(hPins, CC2640R2_LAUNCHXL_PIN_LED0, 0);
+            PIN_setOutputValue(hPins, Board_LED0, 0);
             DELAY_MS(800);
         }
 

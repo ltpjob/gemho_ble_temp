@@ -4,7 +4,7 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := D:/Program Files (x86)/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS
+CG_TOOL_ROOT := D:/Program Files/ccsv8/tools/compiler/ti-cgt-arm_18.1.2.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
@@ -183,7 +183,7 @@ ble5_gemho_temp_cc2640r2lp_stack_library.lib: $(OBJS)
 ifneq ($(strip $(ORDERED_OBJS)),)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Archiver'
-	"D:/Program Files (x86)/ccsv8/tools/compiler/ti-cgt-arm_18.1.1.LTS/bin/armar" r "ble5_gemho_temp_cc2640r2lp_stack_library.lib" $(ORDERED_OBJS)
+	"D:/Program Files/ccsv8/tools/compiler/ti-cgt-arm_18.1.2.LTS/bin/armar" r "ble5_gemho_temp_cc2640r2lp_stack_library.lib" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 endif

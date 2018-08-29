@@ -255,14 +255,14 @@ static uint8_t scanRspData[] =
   0x0A,   // length of this data
   GAP_ADTYPE_LOCAL_NAME_COMPLETE,
   'G',
-  'e',
-  'm',
-  'h',
-  'o',
-  'T',
-  'E',
-  'M',
-  'P',
+  'G',
+  'G',
+  'G',
+  'G',
+  'G',
+  'G',
+  'G',
+  'G',
 
 
   // connection interval range

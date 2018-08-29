@@ -214,6 +214,139 @@ bStatus_t GemhoProfile_Notification(gattCharCfg_t *charCfgTbl, uint8 *pValue,
     return (status);
 }
 
+#if 0
+static void SimpleNotify_taskFxn(UArg a0, UArg a1)
+{
+
+//    ADC_Handle   adc_12, adc_11, adc_8;
+//    ADC_Params   params;
+//    int_fast16_t res12=0, res11=0, res8=0;
+//    uint16_t adcValue12, adcValue11, adcValue8;
+//
+//    ADC_init();
+//    ADC_Params_init(&params);
+//    adc_12 = ADC_open(CC2640R2DK_5XD_ADC5, &params);
+//    adc_11 = ADC_open(CC2640R2DK_5XD_ADC4, &params);
+//    adc_8 = ADC_open(CC2640R2DK_5XD_ADC1, &params);
+//
+//    while(1)
+//    {
+//        if(linkDB_NumActive() > 0)
+//        {
+//            double adcValueMicroVolt_12, adcValueMicroVolt_11, adcValueMicroVolt_8;
+//            char buf[128] = "";
+//
+//            res12 = ADC_convert(adc_12, &adcValue12);
+//            res11 = ADC_convert(adc_11, &adcValue11);
+//            res8 = ADC_convert(adc_8, &adcValue8);
+//
+//            if (res12 == ADC_STATUS_SUCCESS && res11 == ADC_STATUS_SUCCESS && res8 == ADC_STATUS_SUCCESS)
+//            {
+//                adcValueMicroVolt_12 = ADC_convertToMicroVolts(adc_12, adcValue12)/1000.0;
+//                adcValueMicroVolt_11 = ADC_convertToMicroVolts(adc_11, adcValue11)/1000.0;
+//                adcValueMicroVolt_8 = ADC_convertToMicroVolts(adc_8, adcValue8)/1000.0;
+//                sprintf(buf, "%.f %.f %.f", adcValueMicroVolt_12, adcValueMicroVolt_11, adcValueMicroVolt_8);
+//                GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                          GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                          (uint8 *)buf, strlen(buf));
+//            }
+//
+//            DELAY_MS(200);
+//        }
+//        else
+//        {
+//            DELAY_MS(1000);
+//        }
+//    }
+
+    ADC_Handle   adc_13, adc_12, adc_8;
+    ADC_Params   params;
+    int_fast16_t res13=0, res12=0, res8=0;
+    uint16_t adcValue13, adcValue12, adcValue8;
+
+    ADC_init();
+    ADC_Params_init(&params);
+    adc_13 = ADC_open(CC2640R2DK_5XD_ADC6, &params);
+    adc_12 = ADC_open(CC2640R2DK_5XD_ADC5, &params);
+    adc_8 = ADC_open(CC2640R2DK_5XD_ADC1, &params);
+
+    while(1)
+    {
+        if(linkDB_NumActive() > 0)
+        {
+            double adcValueMicroVolt_13, adcValueMicroVolt_12, adcValueMicroVolt_8;
+            char buf[128] = "";
+
+            res13 = ADC_convert(adc_13, &adcValue13);
+            res12 = ADC_convert(adc_12, &adcValue12);
+            res8 = ADC_convert(adc_8, &adcValue8);
+
+            if (res13 == ADC_STATUS_SUCCESS && res12 == ADC_STATUS_SUCCESS && res8 == ADC_STATUS_SUCCESS)
+            {
+                adcValueMicroVolt_13 = ADC_convertToMicroVolts(adc_13, adcValue13)/1000.0;
+                adcValueMicroVolt_12 = ADC_convertToMicroVolts(adc_12, adcValue12)/1000.0;
+                adcValueMicroVolt_8 = ADC_convertToMicroVolts(adc_8, adcValue8)/1000.0;
+                sprintf(buf, "%.f %.f %.f", adcValueMicroVolt_13, adcValueMicroVolt_12, adcValueMicroVolt_8);
+                GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+                                          GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+                                          (uint8 *)buf, strlen(buf));
+            }
+
+            DELAY_MS(200);
+        }
+        else
+        {
+            DELAY_MS(1000);
+        }
+    }
+
+
+//    ADC_Handle   adc_13, adc_12, adc_11, adc_8;
+//    ADC_Params   params;
+//    int_fast16_t res13=0, res12=0, res11=0, res8=0;
+//    uint16_t adcValue13, adcValue12, adcValue11, adcValue8;
+//
+//    ADC_init();
+//    ADC_Params_init(&params);
+//    adc_13 = ADC_open(CC2640R2DK_5XD_ADC6, &params);
+//    adc_12 = ADC_open(CC2640R2DK_5XD_ADC5, &params);
+//    adc_11 = ADC_open(CC2640R2DK_5XD_ADC4, &params);
+//    adc_8 = ADC_open(CC2640R2DK_5XD_ADC1, &params);
+//
+//    while(1)
+//    {
+//        if(linkDB_NumActive() > 0)
+//        {
+//            double adcValueMicroVolt_13, adcValueMicroVolt_12, adcValueMicroVolt_11, adcValueMicroVolt_8;
+//            char buf[128] = "";
+//
+//            res13 = ADC_convert(adc_13, &adcValue13);
+//            res12 = ADC_convert(adc_12, &adcValue12);
+//            res11 = ADC_convert(adc_11, &adcValue11);
+//            res8 = ADC_convert(adc_8, &adcValue8);
+//
+//            if (res13 == ADC_STATUS_SUCCESS && res12 == ADC_STATUS_SUCCESS && res11 == ADC_STATUS_SUCCESS && res8 == ADC_STATUS_SUCCESS)
+//            {
+//                adcValueMicroVolt_13 = ADC_convertToMicroVolts(adc_13, adcValue13)/1000.0;
+//                adcValueMicroVolt_12 = ADC_convertToMicroVolts(adc_12, adcValue12)/1000.0;
+//                adcValueMicroVolt_11 = ADC_convertToMicroVolts(adc_11, adcValue11)/1000.0;
+//                adcValueMicroVolt_8 = ADC_convertToMicroVolts(adc_8, adcValue8)/1000.0;
+//                sprintf(buf, "%.f %.f %.f %.f", adcValueMicroVolt_13, adcValueMicroVolt_12,
+//                        adcValueMicroVolt_11, adcValueMicroVolt_8);
+//                GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                          GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                          (uint8 *)buf, strlen(buf));
+//            }
+//
+//            DELAY_MS(200);
+//        }
+//        else
+//        {
+//            DELAY_MS(1000);
+//        }
+//    }
+}
+#else
 static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 {
     ADC_Handle   adc, vdds;
@@ -221,59 +354,32 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
     int_fast16_t res0=0, res1=0;
     uint16_t adcValue0, adcValue1;
 
-    char buf[128];
-
-
-
     ADC_init();
     ADC_Params_init(&params);
-    adc = ADC_open(CC2640R2_LAUNCHXL_ADC0, &params);
-    vdds = ADC_open(CC2640R2_LAUNCHXL_ADCVDDS, &params);
+    adc = ADC_open(CC2640R2DK_5XD_ADC6, &params);
+    vdds = ADC_open(CC2640R2DK_5XD_ADC1, &params);
 
-    if (adc == NULL) {
-        while (1);
+    if (adc == NULL || vdds == NULL)
+    {
+        while (1)
+            DELAY_MS(1000);
     }
 
     while(1)
     {
         if(linkDB_NumActive() > 0)
         {
-//            adcValue0MicroVolt = 0;
-//            adcVDDSMicroVolt = 0;
-//            temperature = 0;
-//            uint32 loopCount = 100000;
-//            for(int i=0; i<loopCount; i++)
-//            {
-//                res0 = ADC_convert(adc, &adcValue0);
-////                res1 = ADC_convert(vdds, &adcValue1);
-//
-//                if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
-//                {
-//
-////                    adcValue0MicroVolt = ADC_convertToMicroVolts(adc, adcValue0);
-////                    adcVDDSMicroVolt = ADC_convertToMicroVolts(vdds, adcValue1);
-//                    adcValue0MicroVolt = adcValue0;
-//                    adcVDDSMicroVolt = 4095;
-//
-//                    RT = 22.1*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
-//
-//                    temperature += 1/(1/TN + log(RT/RN)/B)-273.15;
-//                }
-//            }
-//            temperature /= loopCount;
-//            sprintf(buf, "%.4f %.4f %.4f %.4f℃ %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
-//                    adcValue0, adcValue1);
-//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-//                                      (uint8 *)buf, strlen(buf));
-
             double adcValue0MicroVolt, adcVDDSMicroVolt;
-            uint32 loopCount = 10000*3;
+            uint32 loopCount = 1000*5;
             double temperature = 0;
             double RT = 0;
             const double B=3949;
             const double TN=273.15+37;//常温
             const double RN=30.218;//常温对应的阻值，注意单位是千欧
+            char buf[128] = "";
+            uint32 tick1, tick2;
+
+            tick1 = Clock_getTicks();
 
             adcValue0MicroVolt = 0;
             adcVDDSMicroVolt = 0;
@@ -286,25 +392,23 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
                 {
                     adcValue0MicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
                     adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
-//                    adcValue0MicroVolt += adcValue0/1000.0;
-//                    adcVDDSMicroVolt += adcValue1/1000.0;
-//                    DELAY_US(100);
                 }
             }
 
-            RT = 22.1*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
+            RT = 30.0*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
             temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
 
-            sprintf(buf, "%.4f %.4f", RT, temperature);
+            tick2 = Clock_getTicks();
+
+            sprintf(buf, "%.4f %.4f %d", RT, temperature, (tick2-tick1)*Clock_tickPeriod/1000);
             sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
 //            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
 //                    adcValue0, adcValue1);
-//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-//                                      (uint8 *)buf, strlen(buf));
+            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+                                      (uint8 *)buf, strlen(buf));
 
-//            DELAY_MS(3000);
-
+            DELAY_MS(1000);
         }
         else
         {
@@ -313,6 +417,7 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
     }
 
 }
+#endif
 
 
 bStatus_t GemhoProfile_AddService( void )
