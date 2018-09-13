@@ -118,13 +118,14 @@ PIN_Config LedPinTable[] = {
 /* Wake-up Button pin table */
 PIN_Config ButtonTableWakeUp[] = {
     Board_BUTTON0     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
-    Board_BUTTON1     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
+    Board_BUTTON1     | PIN_INPUT_EN | PIN_PULLDOWN | PINCC26XX_WAKEUP_POSEDGE,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
 /* Shutdown Button pin table */
 PIN_Config ButtonTableShutdown[] = {
     Board_BUTTON0   | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
+    Board_BUTTON1   | PIN_INPUT_EN | PIN_NOPULL,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
