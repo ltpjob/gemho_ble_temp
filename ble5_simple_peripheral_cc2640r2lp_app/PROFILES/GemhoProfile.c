@@ -369,7 +369,7 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
     {
         if(linkDB_NumActive() > 0)
         {
-            double adcValue0MicroVolt, adcVDDSMicroVolt;
+            double adcNTCMicroVolt, adcVDDCMicroVolt;
             uint32 loopCount = 1000*5;
             double temperature = 0;
             double RT = 0;
@@ -381,8 +381,8 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 
             tick1 = Clock_getTicks();
 
-            adcValue0MicroVolt = 0;
-            adcVDDSMicroVolt = 0;
+            adcNTCMicroVolt = 0;
+            adcVDDCMicroVolt = 0;
             for(int i=0; i<loopCount; i++)
             {
                 res0 = ADC_convert(adc, &adcValue0);
@@ -390,29 +390,29 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 
                 if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
                 {
-                    adcValue0MicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
-                    adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
+                    adcNTCMicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
+                    adcVDDCMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
                 }
             }
 
-            RT = 30.0*adcValue0MicroVolt/(adcVDDSMicroVolt-adcValue0MicroVolt);
+            RT = 30.0*adcNTCMicroVolt/(adcVDDCMicroVolt-adcNTCMicroVolt);
             temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
 
             tick2 = Clock_getTicks();
 
             sprintf(buf, "%.4f %.4f %d", RT, temperature, (tick2-tick1)*Clock_tickPeriod/1000);
             sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
-//            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcValue0MicroVolt/1000000.0, adcVDDSMicroVolt/1000000.0, RT, temperature,
+//            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcNTCMicroVolt/1000000.0, adcVDDCMicroVolt/1000000.0, RT, temperature,
 //                    adcValue0, adcValue1);
-            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                      (uint8 *)buf, strlen(buf));
+//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                      (uint8 *)buf, strlen(buf));
 
-            DELAY_MS(1000);
+            DELAY_MS(10000);
         }
         else
         {
-            DELAY_MS(1000);
+            DELAY_MS(2500);
         }
     }
 

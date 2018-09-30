@@ -111,6 +111,8 @@ PIN_Id activeButtonPinId;
 /* Led pin table used when waking from reset*/
 PIN_Config LedPinTable[] = {
     Board_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
+    Board_BUTTON2 | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
+    Board_BUTTON1 | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
     PIN_TERMINATE                                                    /* Terminate list */
 };
 
@@ -118,14 +120,14 @@ PIN_Config LedPinTable[] = {
 /* Wake-up Button pin table */
 PIN_Config ButtonTableWakeUp[] = {
     Board_BUTTON0     | PIN_INPUT_EN | PIN_PULLUP | PINCC26XX_WAKEUP_NEGEDGE,
-    Board_BUTTON1     | PIN_INPUT_EN | PIN_PULLDOWN | PINCC26XX_WAKEUP_POSEDGE,
+    Board_BUTTON1     | PIN_INPUT_EN | PIN_NOPULL | PINCC26XX_WAKEUP_POSEDGE,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
 /* Shutdown Button pin table */
 PIN_Config ButtonTableShutdown[] = {
     Board_BUTTON0   | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_NEGEDGE,
-    Board_BUTTON1   | PIN_INPUT_EN | PIN_NOPULL,
+//    Board_BUTTON1   | PIN_INPUT_EN | PIN_NOPULL,
     PIN_TERMINATE                                 /* Terminate list */
 };
 
@@ -234,12 +236,15 @@ static void taskFxn_led(UArg a0, UArg a1)
     {
         PIN_setOutputValue(hPins, Board_LED0, 1);
         DELAY_MS(800);
-        if(linkDB_NumActive() <= 0)
+        if(linkDB_NumActive() >0 || (!PIN_getInputValue(Board_BUTTON2) && PIN_getInputValue(Board_BUTTON1)) == 1)
+        {
+            continue;
+        }
+        else
         {
             PIN_setOutputValue(hPins, Board_LED0, 0);
             DELAY_MS(800);
         }
-
     }
 }
 
