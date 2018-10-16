@@ -356,7 +356,7 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 
     ADC_init();
     ADC_Params_init(&params);
-    adc = ADC_open(CC2640R2DK_5XD_ADC6, &params);
+    adc = ADC_open(CC2640R2DK_5XD_ADC5, &params);
     vdds = ADC_open(CC2640R2DK_5XD_ADC1, &params);
 
     if (adc == NULL || vdds == NULL)

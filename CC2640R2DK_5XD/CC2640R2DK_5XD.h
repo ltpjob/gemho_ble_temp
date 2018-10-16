@@ -117,20 +117,20 @@ extern const PIN_Config BoardGpioInitTable[];
 
 /* Analog Capable DIO's */
 #define CC2640R2DK_5XD_DIO7_ANALOG                  PIN_UNASSIGNED
-#define CC2640R2DK_5XD_DIO8_ANALOG                  IOID_8
+#define CC2640R2DK_5XD_DIO8_ANALOG                  IOID_8              //VDDC
 #define CC2640R2DK_5XD_DIO9_ANALOG                  PIN_UNASSIGNED
 #define CC2640R2DK_5XD_DIO10_ANALOG                  PIN_UNASSIGNED
 #define CC2640R2DK_5XD_DIO11_ANALOG                  PIN_UNASSIGNED
-#define CC2640R2DK_5XD_DIO12_ANALOG                  IOID_12
-#define CC2640R2DK_5XD_DIO13_ANALOG                  IOID_13
+#define CC2640R2DK_5XD_DIO12_ANALOG                  IOID_12            //NTC
+#define CC2640R2DK_5XD_DIO13_ANALOG                  PIN_UNASSIGNED
 #define CC2640R2DK_5XD_DIO14_ANALOG                  PIN_UNASSIGNED
 
 
 
 /* Button Board */
-#define CC2640R2DK_5XD_KEY_SELECT                    IOID_4        	/* P1.14 */
-#define CC2640R2DK_5XD_KEY_UP                        IOID_9       	        /* P1.10 */
-#define CC2640R2DK_5XD_KEY_DOWN                      IOID_2       	        /* P1.12 */
+#define CC2640R2DK_5XD_KEY_SELECT                    IOID_11        	    //chg
+#define CC2640R2DK_5XD_KEY_UP                        IOID_9       	        //sw
+#define CC2640R2DK_5XD_KEY_DOWN                      IOID_10       	        //vcc
 #define CC2640R2DK_5XD_KEY_LEFT                      PIN_UNASSIGNED         /* P1.6  */
 #define CC2640R2DK_5XD_KEY_RIGHT                     PIN_UNASSIGNED       	/* P1.8  */
 
@@ -143,8 +143,8 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CC2640R2DK_5XD_PIN_LED_OFF                   0
 #define CC2640R2DK_5XD_PIN_LED1                      PIN_UNASSIGNED
 #define CC2640R2DK_5XD_PIN_LED2                      PIN_UNASSIGNED
-#define CC2640R2DK_5XD_PIN_LED3                      IOID_6                   	/* P1.2  */
-#define CC2640R2DK_5XD_PIN_LED4                      IOID_11        		/* P1.4  */
+#define CC2640R2DK_5XD_PIN_LED3                      IOID_2                   	//led
+#define CC2640R2DK_5XD_PIN_LED4                      PIN_UNASSIGNED        		/* P1.4  */
 
 /* LCD  Board */
 #define CC2640R2DK_5XD_LCD_MODE                      PIN_UNASSIGNED        		/* P1.11 */
