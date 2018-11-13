@@ -214,6 +214,58 @@ bStatus_t GemhoProfile_Notification(gattCharCfg_t *charCfgTbl, uint8 *pValue,
     return (status);
 }
 
+int measure_temp()
+{
+    ADC_Handle   adc, vddc;
+    ADC_Params   params;
+    int_fast16_t res0=0, res1=0;
+    uint16_t adcValue0, adcValue1;
+
+    ADC_init();
+    ADC_Params_init(&params);
+    adc = ADC_open(CC2640R2DK_5XD_ADC5, &params);
+    vddc = ADC_open(CC2640R2DK_5XD_ADC1, &params);
+
+    if (adc == NULL || vddc == NULL)
+    {
+        return -1;
+    }
+
+    double adcNTCMicroVolt, adcVDDCMicroVolt;
+    uint32 loopCount = 1000*5;
+    double temperature = 0;
+    double RT = 0;
+    const double B=3949;
+    const double TN=273.15+37;//常温
+    const double RN=30.218;//常温对应的阻值，注意单位是千欧
+
+    adcNTCMicroVolt = 0;
+    adcVDDCMicroVolt = 0;
+    for(int i=0; i<loopCount; i++)
+    {
+        res0 = ADC_convert(adc, &adcValue0);
+        res1 = ADC_convert(vddc, &adcValue1);
+
+        if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
+        {
+            adcNTCMicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
+            adcVDDCMicroVolt += ADC_convertToMicroVolts(vddc, adcValue1)/1000.0;
+        }
+    }
+
+    ADC_close(adc);
+    ADC_close(vddc);
+
+    RT = 30.0*adcNTCMicroVolt/(adcVDDCMicroVolt-adcNTCMicroVolt);
+    temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
+
+
+    sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
+
+
+    return 0;
+}
+
 #if 0
 static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 {
@@ -349,64 +401,13 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 #else
 static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 {
-    ADC_Handle   adc, vdds;
-    ADC_Params   params;
-    int_fast16_t res0=0, res1=0;
-    uint16_t adcValue0, adcValue1;
-
-    ADC_init();
-    ADC_Params_init(&params);
-    adc = ADC_open(CC2640R2DK_5XD_ADC5, &params);
-    vdds = ADC_open(CC2640R2DK_5XD_ADC1, &params);
-
-    if (adc == NULL || vdds == NULL)
-    {
-        while (1)
-            DELAY_MS(1000);
-    }
+    measure_temp();
 
     while(1)
     {
         if(linkDB_NumActive() > 0)
         {
-            double adcNTCMicroVolt, adcVDDCMicroVolt;
-            uint32 loopCount = 1000*5;
-            double temperature = 0;
-            double RT = 0;
-            const double B=3949;
-            const double TN=273.15+37;//常温
-            const double RN=30.218;//常温对应的阻值，注意单位是千欧
-            char buf[128] = "";
-            uint32 tick1, tick2;
-
-            tick1 = Clock_getTicks();
-
-            adcNTCMicroVolt = 0;
-            adcVDDCMicroVolt = 0;
-            for(int i=0; i<loopCount; i++)
-            {
-                res0 = ADC_convert(adc, &adcValue0);
-                res1 = ADC_convert(vdds, &adcValue1);
-
-                if (res0 == ADC_STATUS_SUCCESS && res1 == ADC_STATUS_SUCCESS)
-                {
-                    adcNTCMicroVolt += ADC_convertToMicroVolts(adc, adcValue0)/1000.0;
-                    adcVDDCMicroVolt += ADC_convertToMicroVolts(vdds, adcValue1)/1000.0;
-                }
-            }
-
-            RT = 30.0*adcNTCMicroVolt/(adcVDDCMicroVolt-adcNTCMicroVolt);
-            temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
-
-            tick2 = Clock_getTicks();
-
-            sprintf(buf, "%.4f %.4f %d", RT, temperature, (tick2-tick1)*Clock_tickPeriod/1000);
-            sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
-//            sprintf(buf, "%.4f %.4f %.4f %.4f %d %d", adcNTCMicroVolt/1000000.0, adcVDDCMicroVolt/1000000.0, RT, temperature,
-//                    adcValue0, adcValue1);
-//            GemhoProfile_Notification(GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-//                                      GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-//                                      (uint8 *)buf, strlen(buf));
+            measure_temp();
 
             DELAY_MS(10000);
         }
