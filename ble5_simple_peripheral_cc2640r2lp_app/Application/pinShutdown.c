@@ -253,7 +253,13 @@ static void taskFxn_led(UArg a0, UArg a1)
 
         PIN_setOutputValue(hPins, Board_LED0, 1);
         DELAY_MS(1000);
-        if(linkDB_NumActive() >0 || (PIN_getInputValue(Board_BUTTON2)==1 && PIN_getInputValue(Board_BUTTON1)==1))
+
+        //Board_BUTTON2 chg      Board_BUTTON1 vcc
+        if(linkDB_NumActive() >0)
+        {
+            continue;
+        }
+        else if(PIN_getInputValue(Board_BUTTON2)==1 && PIN_getInputValue(Board_BUTTON1)==1)
         {
             continue;
         }
@@ -263,6 +269,7 @@ static void taskFxn_led(UArg a0, UArg a1)
             DELAY_MS(1000);
         }
 
+        //Board_BUTTON2 chg      Board_BUTTON1 vcc
         if(PIN_getInputValue(Board_BUTTON2)==0 && PIN_getInputValue(Board_BUTTON1)==1)
         {
             DELAY_MS(2000);
