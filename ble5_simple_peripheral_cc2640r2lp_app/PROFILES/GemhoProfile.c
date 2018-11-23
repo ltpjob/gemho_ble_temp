@@ -59,6 +59,7 @@
 #include <stdio.h>
 #include <ti/drivers/ADC.h>
 #include <math.h>
+#include "VDDS_process.h"
 
 #define GEMNOTIFY_TASK_STACK_SIZE                   2048
 #define DELAY_MS(i)      (Task_sleep(((i) * 1000) / Clock_tickPeriod))
@@ -260,8 +261,7 @@ int measure_temp()
     temperature = 1/(1/TN + log(RT/RN)/B)-273.15;
 
 
-    sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f", RT, temperature);
-
+    sprintf((char *)GemhoProfile_Gemho_serviceVal, "%.4f %.4f %.4f", RT, temperature, get_mem_vdds());
 
     return 0;
 }
@@ -401,6 +401,10 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 #else
 static void SimpleNotify_taskFxn(UArg a0, UArg a1)
 {
+    double sleep_sec = 7.0;
+    const double end_sec = 20.0;
+
+    DELAY_MS(1000);
     measure_temp();
 
     while(1)
@@ -409,11 +413,15 @@ static void SimpleNotify_taskFxn(UArg a0, UArg a1)
         {
             measure_temp();
 
-            DELAY_MS(10000);
+            if(sleep_sec < end_sec)
+                sleep_sec += 0.1;
+
+            DELAY_MS((int)(sleep_sec * 1000));
         }
         else
         {
             DELAY_MS(2500);
+            sleep_sec = 7.0;
         }
     }
 

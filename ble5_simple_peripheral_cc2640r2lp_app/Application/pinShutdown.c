@@ -69,6 +69,8 @@
 #include "OSAL.h"
 #include "linkdb.h"
 #include <ti/drivers/ADC.h>
+#include "VDDS_process.h"
+#include <driverlib/aon_batmon.h>
 #include DeviceFamily_constructPath(inc/hw_prcm.h)
 #include DeviceFamily_constructPath(driverlib/sys_ctrl.h)
 
@@ -112,6 +114,7 @@ PIN_Id activeButtonPinId;
 /* Led pin table used when waking from reset*/
 PIN_Config LedPinTable[] = {
     Board_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
+//    IOID_11       | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH  | PIN_PUSHPULL | PIN_DRVSTR_MIN,
     Board_BUTTON2 | PIN_GPIO_OUTPUT_DIS  | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
     Board_BUTTON1 | PIN_GPIO_OUTPUT_DIS  | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
     PIN_TERMINATE                                                    /* Terminate list */
@@ -199,6 +202,20 @@ static void buttonCb(PIN_Handle handle, PIN_Id pinId) {
     Clock_start(hButtonClock);
 }
 
+static double measure_VDDS()
+{
+    double adcVDDSMicroVolt = 0;
+    uint32_t percent = 0;
+
+    percent = AONBatMonBatteryVoltageGet();
+
+    percent = (percent * 125) >> 5;
+
+    adcVDDSMicroVolt = percent/1000.0 + 0.4;
+
+    return adcVDDSMicroVolt;
+}
+
 /*!*****************************************************************************
  *  @brief      Task which runs when the device is active
  *
@@ -216,7 +233,9 @@ static void taskFxn(UArg a0, UArg a1)
         Semaphore_pend(Semaphore_handle(&shutdownSem), BIOS_WAIT_FOREVER);
 
         if(PIN_getInputValue(Board_BUTTON1)==1)
+        {
             continue;
+        }
 
         /* Turn off LED0 */
         is_ledTaskQuit = 1;
@@ -238,64 +257,24 @@ static void taskFxn(UArg a0, UArg a1)
 static void taskFxn_led(UArg a0, UArg a1)
 {
     hPins = PIN_open(&LedPinState, LedPinTable);
-    ADC_Handle   vdds;
-    ADC_Params   params;
-    uint16_t adcValueVdds;
-    int_fast16_t res=0;
-    int loopCount = 20;
-    double adcVDDSMicroVolt = 0;
     uint32 tick1, tick2;
+    int first_check = 1;
 
     tick1 = Clock_getTicks();
 
     while (is_ledTaskQuit == 0)
     {
-
-        PIN_setOutputValue(hPins, Board_LED0, 1);
-        DELAY_MS(1000);
-
-        //Board_BUTTON2 chg      Board_BUTTON1 vcc
-        if(linkDB_NumActive() >0)
-        {
-            continue;
-        }
-        else if(PIN_getInputValue(Board_BUTTON2)==1 && PIN_getInputValue(Board_BUTTON1)==1)
-        {
-            continue;
-        }
-        else
-        {
-            PIN_setOutputValue(hPins, Board_LED0, 0);
-            DELAY_MS(1000);
-        }
-
-        //Board_BUTTON2 chg      Board_BUTTON1 vcc
-        if(PIN_getInputValue(Board_BUTTON2)==0 && PIN_getInputValue(Board_BUTTON1)==1)
-        {
-            DELAY_MS(2000);
-        }
-        else
+        //if not charging
+        if(PIN_getInputValue(Board_BUTTON1) != 1)
         {
             tick2 = Clock_getTicks();
 
-            if((tick2-tick1)*Clock_tickPeriod/1000000 >= 120)
+            if((tick2-tick1)*Clock_tickPeriod/1000000 >= 120 || first_check == 1)
             {
-                ADC_init();
-                ADC_Params_init(&params);
-                vdds = ADC_open(CC2640R2DK_5XD_ADCVDDS, &params);
-
-                for(int i=0; i<loopCount; i++)
-                {
-                    res = ADC_convert(vdds, &adcValueVdds);
-                    if (res == ADC_STATUS_SUCCESS)
-                    {
-                        adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValueVdds)/1000000.0;
-                    }
-                }
-
-                ADC_close(vdds);
-
-                adcVDDSMicroVolt = adcVDDSMicroVolt/loopCount;
+                first_check = 0;
+                DELAY_MS(20);
+                double adcVDDSMicroVolt = measure_VDDS();
+                set_mem_vdds(adcVDDSMicroVolt);
                 if(adcVDDSMicroVolt <= 3.50)
                 {
                     PIN_setOutputValue(hPins, Board_LED0, 0);
@@ -314,6 +293,33 @@ static void taskFxn_led(UArg a0, UArg a1)
             }
         }
 
+        PIN_setOutputValue(hPins, Board_LED0, 1);
+        DELAY_MS(1000);
+
+
+        //Board_BUTTON2 chg      Board_BUTTON1 vcc
+        if(linkDB_NumActive() >0 && PIN_getInputValue(Board_BUTTON1)!=1)
+        {
+            continue;
+        }
+        else if(PIN_getInputValue(Board_BUTTON2)==1 && PIN_getInputValue(Board_BUTTON1)==1)
+        {
+            continue;
+        }
+        else
+        {
+            PIN_setOutputValue(hPins, Board_LED0, 0);
+            DELAY_MS(1000);
+        }
+
+        //Board_BUTTON2 chg      Board_BUTTON1 vcc
+        if(PIN_getInputValue(Board_BUTTON2)==0 && PIN_getInputValue(Board_BUTTON1)==1)
+        {
+            DELAY_MS(2000);
+        }
+
+
+
     }
 }
 
@@ -331,7 +337,7 @@ int board_initPinShutdown(void)
     Semaphore_Params semParams;
 
     /* Call driver init functions */
-    Board_initGeneral();
+//    Board_initGeneral();
 
     /* Get the reason for reset */
     uint32_t rSrc = SysCtrlResetSourceGet();
@@ -346,49 +352,6 @@ int board_initPinShutdown(void)
     } else {
         /* When not waking from shutdown, use default init table. */
         isWakingFromShutdown = false;
-    }
-
-    //Board_BUTTON2 chg      Board_BUTTON1 vcc
-    if(PIN_getInputValue(Board_BUTTON2)==0 && PIN_getInputValue(Board_BUTTON1)==1)
-    {
-
-    }
-    else
-    {
-        ADC_Handle   vdds;
-        ADC_Params   params;
-        uint16_t adcValueVdds;
-        int_fast16_t res=0;
-        int loopCount = 20;
-        double adcVDDSMicroVolt;
-
-        ADC_init();
-        ADC_Params_init(&params);
-        vdds = ADC_open(CC2640R2DK_5XD_ADCVDDS, &params);
-
-        for(int i=0; i<loopCount; i++)
-        {
-            res = ADC_convert(vdds, &adcValueVdds);
-            if (res == ADC_STATUS_SUCCESS)
-            {
-                adcVDDSMicroVolt += ADC_convertToMicroVolts(vdds, adcValueVdds)/1000000.0;
-            }
-        }
-
-        ADC_close(vdds);
-
-        adcVDDSMicroVolt = adcVDDSMicroVolt/loopCount;
-        if(adcVDDSMicroVolt <= 3.50)
-        {
-            /* Configure DIO for wake up from shutdown */
-            PINCC26XX_setWakeup(ButtonTableWakeUp);
-
-            /* Go to shutdown */
-            Power_shutdown(0, 0);
-
-            /* Should never get here, since shutdown will reset. */
-            while (1);
-        }
     }
 
     /* Setup button pins with ISR */
