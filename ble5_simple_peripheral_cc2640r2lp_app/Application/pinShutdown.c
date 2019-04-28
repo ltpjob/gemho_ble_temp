@@ -114,7 +114,7 @@ PIN_Id activeButtonPinId;
 /* Led pin table used when waking from reset*/
 PIN_Config LedPinTable[] = {
     Board_LED0    | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW  | PIN_PUSHPULL | PIN_DRVSTR_MAX, /* LED initially off */
-//    IOID_11       | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH  | PIN_PUSHPULL | PIN_DRVSTR_MIN,
+    IOID_11       | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH  | PIN_PUSHPULL | PIN_DRVSTR_MIN,
     Board_BUTTON2 | PIN_GPIO_OUTPUT_DIS  | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
     Board_BUTTON1 | PIN_GPIO_OUTPUT_DIS  | PIN_INPUT_EN | PIN_NOPULL | PIN_HYSTERESIS,
     PIN_TERMINATE                                                    /* Terminate list */
@@ -271,11 +271,15 @@ static void taskFxn_led(UArg a0, UArg a1)
 
             if((tick2-tick1)*Clock_tickPeriod/1000000 >= 120 || first_check == 1)
             {
+                double po_volt = 3.30;
+                if(first_check == 1)
+                    po_volt += 0.05;
+
                 first_check = 0;
                 DELAY_MS(20);
                 double adcVDDSMicroVolt = measure_VDDS();
                 set_mem_vdds(adcVDDSMicroVolt);
-                if(adcVDDSMicroVolt <= 3.50)
+                if(adcVDDSMicroVolt <= po_volt)
                 {
                     PIN_setOutputValue(hPins, Board_LED0, 0);
 
